@@ -80,7 +80,7 @@ In this task, you will confirm that both changes were saved on the intended acco
 > [!Important]
 > Partial remediation does not pass. The validator requires both values: `supportsHttpsTrafficOnly` must be `true`, and `publicNetworkAccess` must be `Disabled`.
 
-<validation step="00d4752c-bd91-442c-b4c9-d928d0985376"/>
+<validation step="00d4752c-bd91-442c-b4c9-d928d0985376" />
 
 ## Completion criteria
 
