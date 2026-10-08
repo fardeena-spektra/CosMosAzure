@@ -1,0 +1,23 @@
+{
+  "Name": "Broken-Azure-Environment-Candidate",
+  "Description": "Custom RBAC role for the Broken Azure Environment candidate sandbox. Allows deployment of and portal remediation for the lab VM, supporting network resources, and seeded storage account, while excluding role-assignment changes.",
+  "IsCustom": true,
+  "Actions": [
+    "Microsoft.Resources/deployments/*",
+    "Microsoft.Resources/subscriptions/resourceGroups/read",
+    "Microsoft.Storage/storageAccounts/*",
+    "Microsoft.Network/virtualNetworks/*",
+    "Microsoft.Network/networkInterfaces/*",
+    "Microsoft.Network/publicIPAddresses/*",
+    "Microsoft.Network/networkSecurityGroups/*",
+    "Microsoft.Compute/virtualMachines/*",
+    "Microsoft.Compute/disks/*"
+  ],
+  "NotActions": [
+    "Microsoft.Authorization/*/Write",
+    "Microsoft.Authorization/*/Delete"
+  ],
+  "AssignableScopes": [
+    "/subscriptions/{SUBSCRIPTION_ID}/resourceGroups/rg-candidate-{DEPLOYMENT_ID}"
+  ]
+}

@@ -1,0 +1,172 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "azureUserName": { "type": "string" },
+    "azurePassword": { "type": "securestring" },
+    "ODLID": { "type": "string" },
+    "DeploymentID": { "type": "string" },
+    "adminUsername": { "type": "string" },
+    "adminPassword": { "type": "securestring" },
+    "trainerUserName": { "type": "string" },
+    "trainerUserPassword": { "type": "string" }
+  },
+  "variables": {
+    "scripturl": "https://experienceazure.blob.core.windows.net/templates/cloudlabs/psscript-01.ps1",
+    "LabVMName": "labvm",
+    "vnetName": "[concat('labvnet-', parameters('DeploymentID'))]",
+    "subnetName": "default",
+    "nsgName": "[concat('labnsg-', parameters('DeploymentID'))]",
+    "publicIpName": "[concat('labpip-', parameters('DeploymentID'))]",
+    "nicName": "[concat('labnic-', parameters('DeploymentID'))]",
+    "storageAccountName": "[toLower(concat('stlab', uniqueString(resourceGroup().id, parameters('DeploymentID')))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2024-01-01",
+      "name": "[variables('nsgName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "Allow-RDP",
+            "properties": {
+              "priority": 1000,
+              "protocol": "Tcp",
+              "access": "Allow",
+              "direction": "Inbound",
+              "sourceAddressPrefix": "Internet",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "3389"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "2024-01-01",
+      "name": "[variables('vnetName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "addressSpace": { "addressPrefixes": [ "10.20.0.0/16" ] },
+        "subnets": [
+          {
+            "name": "[variables('subnetName')]",
+            "properties": {
+              "addressPrefix": "10.20.0.0/24",
+              "networkSecurityGroup": { "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]" }
+            }
+          }
+        ]
+      },
+      "dependsOn": [ "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]" ]
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "2024-01-01",
+      "name": "[variables('publicIpName')]",
+      "location": "[resourceGroup().location]",
+      "sku": { "name": "Standard" },
+      "properties": {
+        "publicIPAllocationMethod": "Static",
+        "dnsSettings": { "domainNameLabel": "[toLower(concat('labvm-', parameters('DeploymentID')))]" }
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "apiVersion": "2024-01-01",
+      "name": "[variables('nicName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": { "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('vnetName'), variables('subnetName'))]" },
+              "publicIPAddress": { "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIpName'))]" }
+            }
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIpName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2023-05-01",
+      "name": "[variables('storageAccountName')]",
+      "location": "[resourceGroup().location]",
+      "sku": { "name": "Standard_LRS" },
+      "kind": "StorageV2",
+      "properties": {
+        "supportsHttpsTrafficOnly": false,
+        "publicNetworkAccess": "Enabled",
+        "minimumTlsVersion": "TLS1_2",
+        "allowBlobPublicAccess": false,
+        "allowSharedKeyAccess": true,
+        "networkAcls": { "bypass": "AzureServices", "defaultAction": "Allow", "ipRules": [], "virtualNetworkRules": [] }
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "apiVersion": "2024-03-01",
+      "name": "[variables('LabVMName')]",
+      "location": "[resourceGroup().location]",
+      "plan": { "name": "win2019", "publisher": "spektra", "product": "cloudlabs-windows-jumpvm" },
+      "properties": {
+        "hardwareProfile": { "vmSize": "Standard_B2s" },
+        "storageProfile": {
+          "imageReference": { "publisher": "Spektra", "offer": "cloudlabs-windows-jumpvm", "sku": "win2019", "version": "latest" },
+          "osDisk": { "createOption": "FromImage", "managedDisk": { "storageAccountType": "Standard_LRS" } }
+        },
+        "osProfile": {
+          "computerName": "labvm",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]",
+          "windowsConfiguration": { "enableAutomaticUpdates": true, "provisionVMAgent": true }
+        },
+        "networkProfile": { "networkInterfaces": [ { "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]" } ] },
+        "diagnosticsProfile": { "bootDiagnostics": { "enabled": true } }
+      },
+      "dependsOn": [ "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]" ]
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "apiVersion": "2021-11-01",
+      "name": "[concat(variables('LabVMName'), '/CloudLabsBootstrap')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "publisher": "Microsoft.Compute",
+        "type": "CustomScriptExtension",
+        "typeHandlerVersion": "1.10",
+        "autoUpgradeMinorVersion": true,
+        "settings": { "fileUris": [ "[variables('scripturl')]" ] },
+        "protectedSettings": {
+          "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Bypass -File psscript-01.ps1 -AzureUserName \"', parameters('azureUserName'), '\" -AzurePassword \"', parameters('azurePassword'), '\" -AzureTenantID \"', tenant().tenantId, '\" -AzureSubscriptionID \"', subscription().subscriptionId, '\" -DeploymentID \"', parameters('DeploymentID'), '\" -vmAdminUsername \"', parameters('adminUsername'), '\" -vmAdminPassword \"', parameters('adminPassword'), '\" -trainerUserName \"', parameters('trainerUserName'), '\" -trainerUserPassword \"', parameters('trainerUserPassword'), '\"')]"
+        }
+      },
+      "dependsOn": [ "[resourceId('Microsoft.Compute/virtualMachines', variables('LabVMName'))]" ]
+    }
+  ],
+  "outputs": {
+    "vmServerDnsName": { "type": "string", "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIpName')), '2024-01-01').dnsSettings.fqdn]" },
+    "vmServerUsername": { "type": "string", "value": "[parameters('adminUsername')]" },
+    "vmServerPassword": { "type": "string", "value": "[parameters('adminPassword')]" },
+    "trainerUserName": { "type": "string", "value": "[parameters('trainerUserName')]" },
+    "trainerUserPassword": { "type": "string", "value": "[parameters('trainerUserPassword')]" },
+    "StorageAccountName": { "type": "string", "value": "[variables('storageAccountName')]" },
+    "StorageResourceId": { "type": "string", "value": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]" },
+    "ResourceGroupName": { "type": "string", "value": "[resourceGroup().name]" },
+    "VMName": { "type": "string", "value": "[variables('LabVMName')]" },
+    "LearnerDesktopPath": { "type": "string", "value": "Desktop\\scenario1.txt" },
+    "ExpectedStorageSettings": { "type": "string", "value": "supportsHttpsTrafficOnly=true;publicNetworkAccess=Disabled" },
+    "ExpectedFileContent": { "type": "string", "value": "scenario 1 is completed." },
+    "PortalUrl": { "type": "string", "value": "https://portal.azure.com" }
+  }
+}

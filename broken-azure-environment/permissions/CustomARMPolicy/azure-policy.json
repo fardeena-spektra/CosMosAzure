@@ -1,0 +1,20 @@
+{
+  "if": {
+    "allOf": [
+      {
+        "field": "type",
+        "equals": "Microsoft.Storage/storageAccounts"
+      },
+      {
+        "field": "Microsoft.Storage/storageAccounts/sku.name",
+        "notIn": [
+          "Standard_LRS",
+          "Premium_LRS"
+        ]
+      }
+    ]
+  },
+  "then": {
+    "effect": "deny"
+  }
+}
