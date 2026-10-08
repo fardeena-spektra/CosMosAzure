@@ -12,7 +12,7 @@
     "trainerUserPassword": { "type": "string" }
   },
   "variables": {
-    "scripturl": "https://experienceazure.blob.core.windows.net/templates/cloudlabs/psscript-01.ps1",
+    "scripturl": "https://raw.githubusercontent.com/fardeena-spektra/CosMosAzure/refs/heads/master/broken-azure-environment/DeploymentPackage/psscript-01.ps1",
     "LabVMName": "labvm",
     "vnetName": "[concat('labvnet-', parameters('DeploymentID'))]",
     "subnetName": "default",
