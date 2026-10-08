@@ -19,7 +19,7 @@
     "nsgName": "[concat('labnsg-', parameters('DeploymentID'))]",
     "publicIpName": "[concat('labpip-', parameters('DeploymentID'))]",
     "nicName": "[concat('labnic-', parameters('DeploymentID'))]",
-    "storageAccountName": "[toLower(concat('stlab', uniqueString(resourceGroup().id, parameters('DeploymentID')))]"
+    "storageAccountName": "[toLower(concat('stlab', uniqueString(resourceGroup().id, parameters('DeploymentID'))))]"
   },
   "resources": [
     {
