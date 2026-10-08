@@ -27,19 +27,19 @@ Answer the following Azure-focused questions.
 
 A seeded Azure Storage account has **Secure transfer required** disabled and **Public network access** enabled. What security concern best explains this broken configuration?
 
-<question id="question-01"/>
+<question id="../../Inline-Questions/question-01"/>
 
 ### Question 2
 
 Which Azure Storage account setting should you enable to require clients to use HTTPS for data transfers?
 
-<question id="question-02"/>
+<question id="../../Inline-Questions/question-02"/>
 
 ### Question 3
 
 After remediation, which portal observation verifies the intended secure end state?
 
-<question id="question-03"/>
+<question id="../../Inline-Questions/question-03"/>
 
 ## Task 2: Windows completion-file requirements
 
@@ -49,13 +49,13 @@ Answer the following Windows-focused questions about the file created on `labvm`
 
 Which workflow correctly creates the required completion file on `labvm`?
 
-<question id="question-04"/>
+<question id="../../Inline-Questions/question-04"/>
 
 ### Question 5
 
 Which result confirms that Scenario 2 is complete and the VM-side validator should pass?
 
-<question id="question-05"/>
+<question id="../../Inline-Questions/question-05"/>
 
 ## Summary
 
