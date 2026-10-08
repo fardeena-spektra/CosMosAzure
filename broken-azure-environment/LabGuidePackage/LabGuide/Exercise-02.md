@@ -87,7 +87,7 @@ This exercise is complete when all of the following are true:
 - The file is plain text and contains exactly `scenario 1 is completed.`.
 - You reopened the saved file and verified the content and path.
 
-<validation step="VM file" id="0d765bde-7b8f-4a63-9f89-c392586990ba"/>
+<validation step="0d765bde-7b8f-4a63-9f89-c392586990ba" />
 
 ## Troubleshooting
 
